@@ -1,13 +1,18 @@
-import SignInForm from './component/sign-in-form.component';
+import SignInForm from './component/sign-in-form/sign-in-form.component';
+import SignUpForm from './component/sign-up-form/sign-up-form.component';
 
 import './App.css';
 
 function App() {
   return (
-    <div>
+    <>
       <h1>Hello React</h1>
-      <SignInForm />
-    </div>
+      <div>
+        <SignInForm />
+        <SignUpForm />
+      </div>
+
+    </>
   );
 }
 

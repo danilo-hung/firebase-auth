@@ -1,5 +1,12 @@
 import { initializeApp } from "firebase/app"
-import { getAuth, FacebookAuthProvider, GoogleAuthProvider, signInWithPopup } from "firebase/auth"
+import {
+    getAuth,
+    FacebookAuthProvider,
+    GoogleAuthProvider,
+    signInWithPopup,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword
+} from "firebase/auth"
 import {
     getFirestore,
     doc,
@@ -22,32 +29,49 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 
 //Auth
-const auth = getAuth(firebaseApp)
+export const auth = getAuth(firebaseApp)
 //procider Config
 const provider = new GoogleAuthProvider();
 const fbProvider = new FacebookAuthProvider();
 // provider.setCustomParameters({prompt:"select_account"})
 export const googleSignInWithPopUp = () => signInWithPopup(auth, provider)
 export const facebookSignInwithPopUp = () => signInWithPopup(auth, fbProvider)
+export const emailSignIn = async (email, password) => {
+    if (!email || !password) return;
+    return await signInWithEmailAndPassword(auth, email, password)
+}
 
 export const db = getFirestore(firebaseApp);
-export const creatUserDocumentFromAuth = async(userAuth)=>{
+export const creatUserDocumentFromAuth = async (userAuth, additionalInfo = {}) => {
     const userDocRef = doc(db, "users", userAuth.uid)
-    const userSnapShot = await getDoc(userDocRef);
-    if(!userSnapShot.exists()){
-        const {displayName, email} = userAuth;
+    let userSnapShot = await getDoc(userDocRef);
+    // console.log("snapShot", userSnapShot.data())
+    if (!userSnapShot.exists()) {
+        const { displayName, email } = userAuth;
         const imgurl = userAuth.providerData[0].photoURL;
         const createAt = new Date();
         try {
-            await setDoc(userDocRef,{
+            await setDoc(userDocRef, {
                 displayName,
                 email,
                 imgurl,
-                createAt
+                createAt,
+                ...additionalInfo
             });
-        } catch(e){
+            userSnapShot = await getDoc(userDocRef);
+        } catch (e) {
             console.log(e)
         }
     }
     return userDocRef
+}
+export const getAuthUserInformation = async (userId) => {
+    const userDocRef = doc(db, "users", userId)
+    const userSnapShot = await getDoc(userDocRef);
+    return userSnapShot.data()
+}
+
+export const createAuthUserWithEmailAndPassword = async (email, password) => {
+    if (!email || !password) return;
+    return await createUserWithEmailAndPassword(auth, email, password)
 }
