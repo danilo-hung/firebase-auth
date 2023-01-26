@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
     googleSignInWithPopUp,
     facebookSignInwithPopUp,
-    signInWithEmailAndPassword,
+    emailSignIn,
     creatUserDocumentFromAuth,
-    getAuthUserInformation
+    getAuthUserInformation,
+    userSignOut
 } from "../../utils/firebase/firebase.util"
 import InputForm from "../input-form/input-form.component";
+import "./sign-in-form.style.scss"
 
 const defaultFormFields = {
     createAt: "",
@@ -15,69 +17,102 @@ const defaultFormFields = {
     imgUrl: ""
 }
 
+const defaultEmailFormFields = {
+    email: "",
+    password: ""
+}
+
 const SignInForm = () => {
     const [formFields, setFormFields] = useState(defaultFormFields);
-    const [isSignIn, setIsSignIn] = useState(true);
+    const [isSignIn, setIsSignIn] = useState(false);
+    const [emailFormFields, setEmailFormFields] = useState(defaultEmailFormFields);
+    const [errorMsg, setErrorMsg] = useState("")
 
-    useEffect(()=>{
-        setIsSignIn(!isSignIn)
-    }, [formFields])
+    const onchangeSignIn = (event) => {
+        const { name, value } = event.target;
+        setEmailFormFields({ ...emailFormFields, [name]: value })
+    }
+
 
     const logInWith = async (method) => {
-        const { user } = await method();
+        try {
+            await method
+        } catch (e) {
+            if (e.code === "auth/user-not-found") {
+                setErrorMsg("email not found")
+            } else if(e.code==="auth/wrong-password"){
+                setErrorMsg("email or password is incorrect")
+            }
+                else {
+                console.log(e)
+            }
+
+        }
+        const { user } = await method;
         const { id } = await creatUserDocumentFromAuth(user);
         const userInfo = await getAuthUserInformation(id);
         const { createAt, displayName, email, imgurl } = userInfo;
         const createAtToDate = createAt
             .toDate()
             .toString()
-        const createAtDateAndTime = createAtToDate.replace(/\s\d{2}\:\d{2}\:\d{2}\sGMT.*$/,"")
+        const createAtDateAndTime = createAtToDate.replace(/\s\d{2}:\d{2}:\d{2}\sGMT.*$/, "")
         setFormFields({ createAt: createAtDateAndTime, displayName: displayName, email: email, imgUrl: imgurl })
+        setIsSignIn(true)
     }
 
-    const logInWithGoogle = () => logInWith(googleSignInWithPopUp)
+    const logInWithGoogle = () => logInWith(googleSignInWithPopUp())
 
-    const logInWithFb = () => logInWith(facebookSignInwithPopUp)
+    const logInWithFb = () => logInWith(facebookSignInwithPopUp())
+
+    const logInWithEmail = () => logInWith(emailSignIn(emailFormFields.email, emailFormFields.password))
 
     const signIn = async (event) => {
         event.preventDefault();
+        logInWithEmail()
         console.log("submit")
     }
-    const signOut = async(event) => {
+    const signOut = async (event) => {
         event.preventDefault();
-        console.log("sign out")
+        userSignOut()
+        setIsSignIn(false)
+        setErrorMsg("")
     }
     return (
-        <>
+        <section className="sign-in-form-container">
             {
                 !isSignIn ? (
                     <>
                         {/* show Sign In Form */}
-                        <h2>Sign In Form</h2>
-                        <h3>Email Sign In</h3>
                         <form onSubmit={signIn}>
                             <InputForm
-                                label="Email : "
+                                label="Email"
                                 htmlFor="signInEmail"
                                 id="signInEmail"
                                 type="email"
                                 name="email"
-                            // value={email}
-                            // onChange={onchangehandler}
+                                value={emailFormFields.email}
+                                onChange={onchangeSignIn}
+                                required
                             />
                             <InputForm
-                                label="Password : "
+                                label="Password"
                                 htmlFor="signInPassword"
                                 id="signInPassword"
                                 type="password"
                                 name="password"
-                            // value={email}
-                            // onChange={onchangehandler}
+                                value={emailFormFields.password}
+                                onChange={onchangeSignIn}
+                                required
                             />
-                            <button type="submit">Email Sign In</button>
+                            {errorMsg ? (
+                                <p className="error-msg">{errorMsg}</p>
+                            ) : (
+                                null
+                            )}
+                            <button className="button" type="submit">Sign In</button>
                         </form>
-                        <button onClick={logInWithGoogle}>Google Sign In</button>
-                        <button onClick={logInWithFb}>Facebook Sign In</button>
+                        <button className="button" onClick={logInWithGoogle}><i className="fa-brands fa-google"></i>Google</button>
+                        <button className="button" onClick={logInWithFb}><i className="fa-brands fa-facebook-f"></i>Facebook</button>
 
                     </>
 
@@ -85,17 +120,19 @@ const SignInForm = () => {
 
                     <>
                         {/* show Sign Out Option */}
-                        <h2>Welcome Back, {formFields.displayName}</h2>
-                        <p>your email is : {formFields.email}</p>
-                        <p>you registered at : {formFields.createAt}</p>
-                        <button onClick={signOut}>Sign Out</button>
-                    </>
+                        <div className="sign-in-msg">
+                            <h2>Welcome Back, {formFields.displayName}</h2>
+                            <p>your email is : {formFields.email}</p>
+                            <p>you registered at : {formFields.createAt}</p>
+                            <button className="button" onClick={signOut}>Sign Out</button>
+                        </div>
 
+                    </>
                 )
             }
 
 
-        </>
+        </section>
     )
 }
 

@@ -1,0 +1,37 @@
+.sign-in-form-container {
+    margin: 50px 50px;
+    .error-msg{
+        color: #ff776b;
+    }
+
+    .button {
+        padding: 3px;
+        border: 1px solid rgb(0, 0, 0);
+        margin: 20px 50px 0px 0px;
+        padding: 10px 20px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.514);
+        cursor: pointer;
+        color: white;
+
+        .fa-google,
+        .fa-facebook-f {
+            margin: 0 5px;
+        }
+
+        .fa-google {
+            background: conic-gradient(from -45deg, #ea4335 110deg, #4285f4 90deg 180deg, #34a853 180deg 270deg, #fbbc05 270deg) 73% 55%/150% 150% no-repeat;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+        .fa-facebook-f{
+            color: rgb(66, 103, 178);
+        }
+    }
+    .sign-in-msg{
+        color: rgb(255, 233, 106);
+    }
+
+}
